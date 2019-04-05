@@ -4,7 +4,6 @@ import (
 	"context"
 
 	appv1alpha1 "github.com/TenSt/app-operator/pkg/apis/app/v1alpha1"
-	"github.com/go-logr/logr"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -119,7 +118,12 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 			return reconcile.Result{}, err
 		}
 		instance.Status.Result = "success"
-		updateStatus(r, instance, reqLogger)
+		err := r.client.Status().Update(context.TODO(), instance)
+		if err != nil {
+			reqLogger.Error(err, "Failed to update Status of the CR using statusWriter.", "instance.Namespace", instance.Namespace, "instance.Name", instance.Name)
+		} else {
+			reqLogger.Info("Successfully updated Status of the CR", "instance.Namespace", instance.Namespace, "instance.Name", instance.Name)
+		}
 		// Pod created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
@@ -152,17 +156,5 @@ func newPodForCR(cr *appv1alpha1.AppService) *corev1.Pod {
 			},
 			RestartPolicy: "Never",
 		},
-	}
-}
-
-// updateStatus is used to update Status struct of a CR
-// It first uses a new way of updating Status (for 1.10.x+ k8s)
-// If that way fails with error - it uses old way (for k8s versions 1.9.x and lesser)
-func updateStatus(r *ReconcileAppService, instance *appv1alpha1.AppService, reqLogger logr.Logger) {
-	err := r.client.Status().Update(context.TODO(), instance)
-	if err != nil {
-		reqLogger.Error(err, "Failed to update Status of the CR using statusWriter.", "instance.Namespace", instance.Namespace, "instance.Name", instance.Name)
-	} else {
-		reqLogger.Info("Successfully updated Status of the CR", "instance.Namespace", instance.Namespace, "instance.Name", instance.Name)
 	}
 }
