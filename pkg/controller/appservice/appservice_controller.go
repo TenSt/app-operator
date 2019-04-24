@@ -117,6 +117,10 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+		reqLogger.Info("BEFORE UPDATE")
+		reqLogger.Info("Instance name: " + instance.Name)
+		reqLogger.Info("Instance typeMeta kind: " + instance.TypeMeta.Kind)
+		reqLogger.Info("Instance kind: " + instance.Kind)
 		instance.Status.Result = "success"
 		err := r.client.Status().Update(context.TODO(), instance)
 		if err != nil {
@@ -124,6 +128,10 @@ func (r *ReconcileAppService) Reconcile(request reconcile.Request) (reconcile.Re
 		} else {
 			reqLogger.Info("Successfully updated Status of the CR", "instance.Namespace", instance.Namespace, "instance.Name", instance.Name)
 		}
+		reqLogger.Info("AFTER UPDATE")
+		reqLogger.Info("Instance name: " + instance.Name)
+		reqLogger.Info("Instance typeMeta kind: " + instance.TypeMeta.Kind)
+		reqLogger.Info("Instance kind: " + instance.Kind)
 		// Pod created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
